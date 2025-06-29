@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FootballBuddy</title>
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Google Fonts (Black Ops One and Roboto) -->
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Preconnect for Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Chart.js Datalabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <style>
+    /* Page background */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      margin: 0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Title box with background video */
+    .title-box {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 150px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    #bg-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    /* Static Title */
+    h1 {
+      text-align: center;
+      font-family: 'Black Ops One', system-ui;
+      font-size: 2.5em;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      z-index: 1;
+    }
+
+    /* Main container */
+    .app-container {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      flex-direction: row;
+    }
+
+    /* Left Column: Widget Buttons and Content */
+    .widget-column {
+      width: 70px;
+      transition: width 0.3s ease;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: calc(100vh - 190px);
+      overflow-y: auto;
+    }
+    .widget-column.expanded {
+      width: 400px;
+    }
+
+    /* Widget Button Styles */
+    .widget-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.9em;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      border-radius: 8px;
+      background: linear-gradient(45deg, #4b0082, #00b7eb);
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .widget-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+      background: linear-gradient(45deg, #00b7eb, #4b0082);
+    }
+    .widget-btn i {
+      margin-right: 8px;
+      font-size: 1.2em;
+      transition: transform 0.3s ease;
+    }
+    .widget-btn:hover i {
+      transform: scale(1.2);
+    }
+    .widget-btn.active {
+      background: linear-gradient(45deg, #00b7eb, #4b0082);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    }
+    .widget-column:not(.expanded) .widget-btn span {
+      display: none;
+    }
+    .widget-column:not(.expanded) .widget-btn i {
+      margin-right: 0;
+    }
+
+    /* Widget Content Styles */
+    .widget-content {
+      display: none;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-top: 10px;
+    }
+    .widget-content.active {
+      display: block;
+    }
+    .widget-content iframe {
+      width: 100%;
+      height: 400px;
+      border: none;
+      border-radius: 8px;
+    }
+    .widget-content h3 {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      color: #e0e0e0;
+    }
+    .widget-content p {
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    /* Chatbot Styles */
+    .chatbot-container {
+      display: flex;
+      flex-direction: column;
+      height: 400px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .chatbot-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chatbot-message {
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.4;
+    }
+    .chatbot-message.user {
+      background: linear-gradient(45deg, #6a5acd, #00bfff);
+      align-self: flex-end;
+      color: #fff;
+    }
+    .chatbot-message.bot {
+      background: rgba(255, 255, 255, 0.1);
+      align-self: flex-start;
+      color: #CBD5E1;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .chatbot-input-container {
+      display: flex;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .chatbot-input {
+      flex-grow: 1;
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      transition: border-color 0.3s ease;
+    }
+    .chatbot-input:focus {
+      border-color: #00ffcc;
+      outline: none;
+    }
+    .chatbot-send-btn {
+      margin-left: 8px;
+      padding: 8px 12px;
+      background: linear-gradient(45deg, #6a5acd, #00bfff);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .chatbot-send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+    }
+    .chatbot-send-btn i {
+      font-size: 1.2em;
+    }
+
+    /* Data text styles */
+    .data-card p, .data-card li, .data-card td, .data-card th, .date-range, .no-fixtures, .fixtures-loading {
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .data-card h3 {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      color: #e0e0e0;
+    }
+    .data-card .highlight {
+      color: #00ffcc;
+      font-weight: 500;
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+    }
+
+    /* Search Bar Styles */
+    input[type="text"] {
+      padding: 10px 12px;
+      width: 100%;
+      font-size: 14px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transition: border-color 0.3s ease;
+    }
+    input[type="text"]:focus {
+      border-color: #00ffcc;
+      outline: none;
+    }
+    input[type="text"].radar-scan {
+      animation: radar-glow 2s linear infinite;
+    }
+    @keyframes radar-glow {
+      0% { box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); border-color: #00ffcc; }
+      50% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.7); border-color: #00ffcc; }
+      100% { box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); border-color: #00ffcc; }
+    }
+
+    /* Glow Button Styles */
+    .glow-btn {
+      background: linear-gradient(45deg, #6a5acd, #00bfff);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .glow-btn::before {
+      content: '';
+      position: absolute;
+      background: inherit;
+      filter: blur(12px);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      transition: opacity 0.3s ease;
+      opacity: 0;
+    }
+    .glow-btn:hover::before {
+      opacity: 1;
+    }
+    .glow-btn:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+    .glow-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .glow-btn i { margin-right: 6px; }
+
+    /* Specific button styles */
+    #searchBtn, #clearBtn, .share-btn, .social-share-buttons button {
+      background: linear-gradient(45deg, #6a5acd, #00bfff);
+      padding: 10px 20px;
+      border-radius: 8px;
+    }
+    .share-btn {
+      border-radius: 50%;
+      padding: 12px;
+      font-size: 16px;
+    }
+    .social-share-buttons button {
+      padding: 10px;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+    #whatsapp-share { background: linear-gradient(45deg, #25d366, #00bfff); }
+    #facebook-share { background: linear-gradient(45deg, #1877f2, #00bfff); }
+    #twitter-share { background: linear-gradient(45deg, #1da1f2, #00bfff); }
+    #linkedin-share { background: linear-gradient(45deg, #0077b5, #00bfff); }
+
+    /* Clickable Text Styles */
+    .clickable-text {
+      color: #00ffcc;
+      font-size: 16px;
+      font-weight: 500;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+    .clickable-text:hover {
+      color: #00bfff;
+    }
+    .clickable-text i {
+      margin-right: 6px;
+    }
+
+    /* Suggestions Box */
+    .suggestions-box {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: rgba(255, 255, 255, 0.9);
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      z-index: 100;
+      display: none;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .suggestions-box div {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+    }
+    .suggestions-box div:hover {
+      background-color: #f0f0f0;
+    }
+    .suggestions-box img {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      object-fit: contain;
+    }
+
+    /* Glassmorphism Cards */
+    .data-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .data-card.active { display: block; }
+    .data-card table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 10px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .data-card th, .data-card td {
+      padding: 10px;
+      border: none;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .data-card th {
+      background: linear-gradient(45deg, #6a5acd, #00bfff);
+      color: #fff;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    .data-card tbody tr {
+      transition: background 0.3s ease;
+    }
+    .data-card tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .data-card tbody tr:hover {
+      background: rgba(0, 255, 204, 0.2);
+      color: #fff;
+    }
+    .data-card .fixtures-table {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .data-card .no-fixtures {
+      font-style: italic;
+      text-align: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+    }
+    .data-card .date-range {
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      max-width: 400px;
+      max-height: 400px;
+      margin: 15px auto;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+
+    /* Styling for the Sportsloci livescore widget */
+    .iframe_container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 8px;
+      width: 100%;
+      max-width: 560px;
+      height: 400px;
+      overflow: hidden;
+    }
+    .iframe_container * {
+      font-family: 'Roboto', sans-serif !important;
+      color: #CBD5E1 !important;
+    }
+    .iframe_container table, .iframe_container tr, .iframe_container td {
+      background: transparent !important;
+      border: none !important;
+    }
+    .iframe_container th {
+      background: linear-gradient(45deg, #6a5acd, #00bfff) !important;
+      color: #fff !important;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .iframe_container tr:hover {
+      background: rgba(0, 255, 204, 0.2) !important;
+    }
+    .iframe_container img {
+      width: 20px !important;
+      height: 20px !important;
+      object-fit: contain !important;
+    }
+    .iframe_container h1,
+    .iframe_container h2,
+    .iframe_container [class*="title"],
+    .iframe_container [id*="title"] {
+      display: none !important;
+    }
+
+    /* Video Popup */
+    .video-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1001;
+      justify-content: center;
+      align-items: center;
+    }
+    .video-popup-content {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      max-width: 700px;
+      max-height: 80vh;
+      width: 90%;
+      height: auto;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      overflow-y: auto;
+    }
+    .video-popup-content iframe {
+      width: 100%;
+      height: 400px;
+      border: none;
+      border-radius: 8px;
+    }
+    #video-close {
+      background: linear-gradient(45deg, #dc3545, #b02a37);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    #video-close:hover { transform: scale(1.1); }
+
+    /* Standings Dropdown */
+    .standings-dropdown {
+      position: relative;
+      display: inline-flex;
+      margin-top: 10px;
+    }
+    .standings-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      min-width: 200px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      z-index: 101;
+      flex-direction: column;
+      padding: 8px 0;
+      animation: slideDown 0.3s ease-out;
+    }
+    .standings-menu.active { display: flex; }
+    .standings-menu div.league-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      cursor: pointer;
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+    .standings-menu div.league-item:hover {
+      background: rgba(0, 255, 204, 0.2);
+      color: #fff;
+    }
+    .standings-menu div.league-item i {
+      font-size: 11px;
+      color: #00ffcc;
+    }
+    .years-submenu {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      min-width: 120px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      z-index: 102;
+      flex-direction: column;
+      padding: 6px 0;
+    }
+    .standings-menu div.league-item:hover .years-submenu {
+      display: flex;
+    }
+    .years-submenu div {
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      font-size: 13px;
+      transition: background 0.3s ease;
+    }
+    .years-submenu div:hover {
+      background: rgba(0, 255, 204, 0.2);
+      color: #fff;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Floating Share Button */
+    .share-btn {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    .social-share-buttons {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+    }
+    .social-share-buttons button {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Loader Styles */
+    .loader-container {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Loader Animation */
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid transparent;
+      border-top-color: #00ffcc;
+      border-right-color: #6a5acd;
+      border-radius: 50%;
+      animation: spin 1.2s ease-in-out infinite, pulse 2s ease-in-out infinite;
+      position: relative;
+    }
+
+    /* Inner Glow Effect */
+    .loader::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(0, 255, 204, 0.8), transparent);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: glow 1.5s ease-in-out infinite;
+    }
+
+    /* Loader Text */
+    .loader-text {
+      color: #CBD5E1;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      animation: fadeInOut 2s ease-in-out infinite;
+    }
+
+    /* Loader Animations */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.5), 0 0 20px rgba(106, 90, 205, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 30px rgba(106, 90, 205, 0.5); }
+      100% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.5), 0 0 20px rgba(106, 90, 205, 0.3); }
+    }
+
+    @keyframes glow {
+      0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.8); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.8); }
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    /* Existing Loader Styles (Updated) */
+    #loader {
+      display: none;
+    }
+    .fixtures-loading {
+      text-align: center;
+      padding: 15px;
+      font-size: 14px;
+    }
+    .fixtures-loading i {
+      margin-right: 8px;
+      animation: spin-icon 1s linear infinite;
+    }
+    @keyframes spin-icon {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      h1 { font-size: 2em; }
+      .title-box { height: 120px; }
+      .widget-column { width: 60px; }
+      .widget-column.expanded { width: 100%; max-width: 350px; }
+      .widget-content iframe { height: 300px; }
+      .widget-btn { font-size: 0.8em; padding: 8px; }
+      .widget-btn i { font-size: 1em; }
+      .video-popup-content { width: 95%; max-height: 70vh; }
+      .video-popup-content iframe { height: 300px; }
+      .standings-menu { min-width: 160px; }
+      .years-submenu { left: 0; top: 100%; min-width: 100px; }
+      .data-card table { font-size: 11px; }
+      .data-card th, .data-card td { padding: 6px; }
+      .data-card .fixtures-table { overflow-x: auto; display: block; }
+      .data-card .date-range { font-size: 11px; }
+      .chart-container { max-width: 300px; max-height: 300px; }
+      .iframe_container { height: 300px !important; max-width: 100% !important; }
+      .iframe_container img { width: 18px !important; height: 18px !important; }
+      .chatbot-container { height: 300px; }
+      .chatbot-message { font-size: 12px; }
+      .chatbot-input { font-size: 12px; }
+      .chatbot-send-btn { padding: 6px 10px; }
+      .loader-container { padding: 15px; }
+      .loader { width: 40px; height: 40px; border-width: 4px; }
+      .loader::before { width: 16px; height: 16px; }
+      .loader-text { font-size: 12px; }
+    }
+    canvas { width: 100% !important; height: auto !important; }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div id="loader" class="loader-container">
+    <div class="loader"></div>
+    <p class="loader-text">Loading FootballBuddy...</p>
+  </div>
+  
+  <!-- Title Box with Background Video -->
+  <div class="title-box">
+    <video id="bg-video" autoplay muted loop>
+      <source src="https://www.desktophut.com/files/Fifa%20%20Football%20%20Artwork%20%20Abstract%20%204K%20%20Live%20%20Wallpaper.mp4">
+      Your browser does not support HTML5 video.
+    </video>
+    <h1>
+      <i class="fas fa-futbol"></i>
+      FootballBuddy
+    </h1>
+  </div>
+  
+  <!-- Main Container -->
+  <div class="app-container container-fluid">
+    <!-- Left Column: Widget Buttons and Content -->
+    <div class="widget-column" id="widgetColumn">
+      <!-- Widget Buttons -->
+      <button class="widget-btn" id="videoHighlightsBtn" aria-label="View video highlights">
+        <i class="fas fa-video"></i><span>Video Highlights</span>
+      </button>
+      <button class="widget-btn" id="liveMatchesBtn" aria-label="View live matches">
+        <i class="fas fa-broadcast-tower"></i><span>Live Matches</span>
+      </button>
+      <button class="widget-btn" id="fifaRankingBtn" aria-label="View FIFA world rankings">
+        <i class="fas fa-trophy"></i><span>FIFA Rankings</span>
+      </button>
+      <button class="widget-btn" id="aiChatbotBtn" aria-label="Chat with AI Assistant">
+        <i class="fas fa-robot"></i><span>AI Chatbot</span>
+      </button>
+      <!-- Widget Content -->
+      <div class="widget-content" id="videoHighlightsContent">
+        <h3>Trending Match Highlights</h3>
+        <p>Explore trending football highlights across all teams.</p>
+        <iframe 
+          src="https://www.scorebat.com/embed/videofeed/?token=MjA4ODYxXzE3NDU0MDM4NTFfNGQ4OWI4ZjdmZjgxNmNhOTY5ZWRlZTEzZGZiYjkxNTRhMWUyZjkxNQ==" 
+          frameborder="0" 
+          width="100%" 
+          height="400px" 
+          allowfullscreen 
+          allow='autoplay; fullscreen' 
+          style="border-radius: 8px;"
+          class="_scorebatEmbeddedPlayer_">
+        </iframe>
+      </div>
+      <div class="widget-content" id="liveMatchesContent">
+        <h3>Live Matches</h3>
+        <p>Follow live football matches from around the world.</p>
+        <iframe class="iframe_container" rel="nofollow" src="https://sportsloci.com/widgets/live-scores-no/1005/rgb(0,0,0)" style="height: 400px; width: 100%; max-width: 560px;"></iframe>
+      </div>
+      <div class="widget-content" id="fifaRankingContent">
+        <h3>FIFA World Rankings</h3>
+        <p>View the latest FIFA world rankings for football teams.</p>
+        <iframe 
+          style='height:400px;' 
+          src='https://www.scoremer.com/widgets/fifa_world_ranking?c=196b9f&f=FFF'  
+          scrolling='auto' 
+          border='0' 
+          frameborder='0'>
+        </iframe>
+      </div>
+      <div class="widget-content" id="aiChatbotContent">
+        <h3>AI Football Assistant</h3>
+        <p>Ask about football teams, players, matches, or predictions!</p>
+        <div class="chatbot-container">
+          <div class="chatbot-messages" id="chatbotMessages"></div>
+          <div class="chatbot-input-container">
+            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type your question..." aria-label="Type your question for the AI chatbot">
+            <button class="chatbot-send-btn" id="chatbotSendBtn" aria-label="Send message to AI chatbot"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Column: Search Bar and Results -->
+    <div class="flex-grow-1 ps-3">
+      <!-- Search Bar Row -->
+      <div class="row mb-3">
+        <div class="col-12 col-md-8 mx-auto">
+          <div class="input-group position-relative">
+            <input type="text" id="teamSearch" class="form-control" placeholder="Search team or player ID..." aria-label="Search for a football team or player ID" />
+            <button id="searchBtn" class="glow-btn ms-2" aria-label="Search team or player"><i class="fas fa-search"></i> Search</button>
+            <button id="clearBtn" class="glow-btn ms-2" aria-label="Clear search and results"><i class="fas fa-trash-alt"></i> Clear</button>
+            <div id="suggestions-box" class="suggestions-box"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Search Results and Output -->
+      <div class="row">
+        <div class="col-12">
+          <div class="d-flex flex-column gap-3">
+            <div id="searchResults" class="data-card"></div>
+            <div id="output" class="data-card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Video Popup -->
+  <div class="video-popup" id="video-popup">
+    <div class="video-popup-content" id="video-popup-content">
+      <button id="video-close" aria-label="Close video popup"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+  
+  <!-- Floating Share Button -->
+  <button class="share-btn glow-btn" id="shareBtn" aria-label="Toggle social share options">
+    <i class="fas fa-share-alt"></i>
+  </button>
+  <div class="social-share-buttons" id="socialShareButtons">
+    <button id="whatsapp-share" class="glow-btn" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp"></i></button>
+    <button id="facebook-share" class="glow-btn" aria-label="Share on Facebook"><i class="fab fa-facebook-f"></i></button>
+    <button id="twitter-share" class="glow-btn" aria-label="Share on Twitter"><i class="fab fa-twitter"></i></button>
+    <button id="linkedin-share" class="glow-btn" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in"></i></button>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="index.js"></script>
+</body>
+</html>
