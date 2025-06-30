@@ -1,4 +1,4 @@
-FootballBuddy
+
 FootballBuddy is a web application for football fans, providing real-time match updates, team statistics, video highlights, FIFA world rankings, and an interactive AI chatbot powered by OpenAI. It integrates with SportsDB, SportMonks, Scorebat, and OpenAI APIs to deliver a seamless football experience.
 Features
 
